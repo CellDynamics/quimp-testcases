@@ -1,0 +1,13 @@
+.pytest_cache/
+
+# ignore QuimP files
+*.pgQP
+*motility*
+*.svg
+*convexity*
+*xMap*
+*yMap*
+*outline-frame*
+*originMap*
+*fluoCh1*
+*coordMap*
