@@ -1,16 +1,18 @@
 # numpy2paqp
 
-This workflow describes algorithm for conversion contours from numpy text files to QuimP datafiles. Numpy file is expected to contain coordinates of contours in format for each row:
+This document describes the workflow for conversion contours from numpy text files to QuimP datafiles. Numpy file is expected to contain coordinates of contours in the format for each row:
 
 ```
-frame   x1  y1  x2  y2  ...
+frame1   x1  y1  x2  y2  ...
+frame2   x1  y1  x2  y2  ...
+...
 ```
 
 ## The workflow
 
-In principle the numpy file is converted to old *paQP* files, which are then processed in QuimP. Final solution is converted back to *csv* for sake of readability.
+In principle the numpy file is converted to old *paQP* files, which are then processed in QuimP. Final solution (maps) is converted back to *csv* for sake of readability.
 
-1. Run numpy2paqp tool to convert numpy dataset to *paQP*. Three files will be generated:
+1. Run `numpy2paqp` tool to convert numpy dataset to *paQP*. Three files will be generated:
    1. `image.tif` - fake black image of size of processed data needed for BOA
    2. `output_0.paQP` - master file
    3. `output_0.snQP` - file with contours

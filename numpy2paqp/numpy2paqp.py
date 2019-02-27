@@ -1,11 +1,22 @@
-"""Conversion tool numpy<->paqp."""
+"""
+Conversion tool numpy<->paqp.
+
+The numpy array should have format:
+
+    frame1 x1 y1 x2 y2 ...
+    frame2 x1 y1 x2 y2 ...
+
+    where x and y are coordinates of contour nodes.
+
+"""
 
 import argparse
-import numpy as np
-import os
 import logging
-from datetime import datetime
+import os
 import random
+from datetime import datetime
+
+import numpy as np
 from skimage.external.tifffile import imsave
 
 logger = logging.getLogger(__name__)
@@ -19,26 +30,27 @@ parser = argparse.ArgumentParser()
 parser.add_argument("input", help="Input file. Extension determines conversion direction")
 parser.add_argument("output", help="Destination file")
 parser.add_argument("--image", help="Image related to this dataset. If not specified, empty image will be generated")
-args = parser.parse_args()
 
 
 def getImage(path, slices, res=(512, 512)):
     """
-    Generate fake tiff.
+    Generate fake tiff in specified size.
 
     Args:
     path (str):     nam and path of the image
     slices (int):   number of slices
-    res (int,int):  resolution
+    res (int, int):  resolution
     """
     image = np.zeros((slices, *res), dtype=np.uint8)
     imsave(path, image)
-    logger.debug('Created image {}'.format(path))
+    logger.info('Created image {}'.format(path))
 
 
 def getSnName(rootname):
     """
-    Create Snake file name from specified name.
+    Create Snake file name from specified rootname.
+
+    Snake file is relative to folder where paQP file is.
 
     Args:
     rootname (path):    root name, can have extension
@@ -59,16 +71,16 @@ def generatepaQP(name, frames):
     Recreate paQP file.
 
     Args:
-        name (path):    name and path of the output file.
-        frames (int):   number of frames
-     """
+    name (path):    name and path of the output file.
+    frames (int):   number of frames
+    """
     snakefile = getSnName(name)
-    logger.debug("Snake file name {}".format(snakefile))
+    logger.info("Snake file name {}".format(snakefile))
     if not os.path.splitext(name)[1]:
         name += '_0.paQP'
     else:
         name = os.path.splitext(name)[0]+'_0.paQP'
-    logger.debug(f"Writing paQP at: {name}")
+    logger.info(f"Writing paQP at: {name}")
     with open(name, 'w') as stream:
         stream.write("#p2 - QuimP parameter file (QuimP11). Created {}\n".format(datetime.now()))
         stream.write(str(random.randint(0, 10000))+'\n')
@@ -112,7 +124,7 @@ def getDistances(xy):
     xy (numpy): 2 column array (x,y) of pixels
 
     Return
-    dist (numpy):   An array of size array.shape - 1 of distances between pixels
+    dist (numpy):   An array of size array.shape of distances between pixels
     """
     xys = np.roll(xy, -1, 0)  # shifted upwards
     dist = np.sqrt(np.sum((xy-xys)**2, axis=1))
@@ -120,6 +132,17 @@ def getDistances(xy):
 
 
 def rescale(array, res=(512, 512)):
+    """
+    Center the countours.
+
+    Args:
+    array (numpy):  array read from text file in format frame x1 y1 x2 y2...
+    res (int, int): resoultion of fake image the contours are placed in
+
+    Returns:
+    array (numpy):  array of the same size and structure as input one but with coordinates of contours shifted to the
+                    center of image
+    """
     coords = array[:, 1:]  # get rid of frame number
     sh = coords.shape
     xy = coords.reshape((-1, 2))  # 2 columns
@@ -129,9 +152,14 @@ def rescale(array, res=(512, 512)):
     return array
 
 
-def saveFrames(array, stream, res=(512, 512)):
+def _saveFrames(array, stream, res=(512, 512)):
     """
     Save frames from numpy data file.
+
+    Args:
+    array (numpy):  array read from text file in format frame x1 y1 x2 y2...
+    stream (file):  file to save in
+    res (int, int): resoultion of fake image the contours are placed in
     """
     for f in array:
         frame = f[0]
@@ -155,26 +183,30 @@ def saveFrames(array, stream, res=(512, 512)):
                         c=-2.))
 
 
-def generatesnQp(name):
+def generatesnQp(name, res=(512, 512)):
     """Write snake file."""
     snakefile = getSnName(name)
     snakefile_abs = os.path.join(os.path.dirname(name), os.path.basename(snakefile))
-    array = rescale(np.loadtxt(args.input))
-    logger.debug(f"Writing snQP at: {snakefile_abs}")
+    array = rescale(np.loadtxt(args.input), res)
+    logger.info(f"Writing snQP at: {snakefile_abs}")
     with open(snakefile_abs, 'w') as stream:
         stream.write("#QuimP11 node data\n")
         stream.write(
             "#Node Position	X-coord	Y-coord	Origin	G-Origin	Speed	Fluor_Ch1	Ch1_x	Ch1_y	Fluor_Ch2	Ch2_x	Ch2_y	Fluor_CH3	CH3_x	Ch3_y\n")
         stream.write("#\n")
-        saveFrames(array, stream)
+        _saveFrames(array, stream, res)
 
 
-if "txt" in os.path.splitext(args.input)[1]:
-    logger.debug("Converting txt->paQp")
-    frames = np.loadtxt(args.input).shape[0]
-    if args.image is None:
-        args.image = os.path.abspath(os.path.join(os.path.dirname(args.output), 'image.tif'))
-        getImage(args.image, frames)
-
-    generatepaQP(args.output, frames)
-    generatesnQp(args.output)
+if __name__ == "__main__":
+    args = parser.parse_args()
+    # FIXME: Not full implemented, only one way conversion
+    if "txt" in os.path.splitext(args.input)[1]:
+        logger.info("Converting txt->paQp")
+        frames = np.loadtxt(args.input).shape[0]
+        if args.image is None:
+            args.image = os.path.abspath(os.path.join(os.path.dirname(args.output), 'image.tif'))
+            getImage(args.image, frames)
+        generatepaQP(args.output, frames)
+        generatesnQp(args.output)
+    else:
+        raise NotImplementedError
