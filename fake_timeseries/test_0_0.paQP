@@ -1,0 +1,32 @@
+#p2 - QuimP parameter file (QuimP11). Created 2019/02/27 10:01:47
+354925
+C:\Users\baniu\Documents\Repos\moving_shapes\test_0.tif
+\test_0_0.snQP
+#Image calibration (scale, frame interval)
+1.000000
+1.000
+#segmentation parameters (Maximum number of nodes, ND, Max iterations, Node spacing, Blowup, Sample tan, Sample norm, Crit velocity, Central F, Contract F, ND, Image force, ND)
+250
+1.000000
+4000.000000
+4.000000
+20.000000
+4
+12
+0.005000
+0.040000
+0.040000
+0.600000
+0.200000
+0.500000
+# - new parameters (cortex width, start frame, end frame, final shrink, statsQP, fluImage)
+1.00
+1
+100
+4.00
+\test_0_0.stQP.csv
+# - Fluorescence channel tiff's
+C:\Users\baniu\Documents\Repos\moving_shapes\test_0.tif
+C:\
+C:\
+#END
