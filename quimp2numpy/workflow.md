@@ -96,7 +96,7 @@ QuimP can rasterize contours and produce binary maps from them. For this purpose
 
 Contour009 rasterised (every 2nd frame):
 
-![enter image description here](assets/montage.png)
+![enter image description here](assets/Montage.png)
 
 ```java
 run("Generate mask", "opts={binary:true,paramFile:(C:/Users/baniu/Documents/test/160617-Lifeact-mRFP-3.QCONF)}");
